@@ -75,5 +75,17 @@ Router.prototype.search = function (q, near) {
   });
 };
 
+// 좌표 → 주소 (119 신고 시 위치 안내용). Nominatim reverse, 결과는 캐시된다.
+Router.prototype.reverse = function (lat, lon) {
+  var url = this.cfg.nominatim + '/reverse?format=jsonv2&accept-language=ko&zoom=18&lat=' + (+lat).toFixed(6) + '&lon=' + (+lon).toFixed(6);
+  return this.get(url).then(function (d) {
+    if (!d || d.error) throw new Error((d && d.error) || '주소 없음');
+    var a = d.address || {}, road = [a.road, a.house_number].filter(Boolean).join(' ');
+    var parts = [a.province || a.state, a.city, a.borough || a.county || a.city_district, a.suburb || a.quarter || a.neighbourhood, road].filter(function (x, i, arr) { return x && arr.indexOf(x) === i; });
+    var addr = parts.length >= 2 ? parts.join(' ') : String(d.display_name || '').split(', ').reverse().filter(function (s) { return !/^\d{5}$/.test(s) && s !== '대한민국'; }).join(' ');
+    return { addr: addr, place: d.name || a.amenity || a.building || '' };
+  });
+};
+
 return { Router: Router, DEFAULTS: DEFAULTS };
 });

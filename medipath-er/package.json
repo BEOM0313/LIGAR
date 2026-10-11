@@ -6,7 +6,6 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "demo": "DEMO=1 node server.js",
     "test": "node --test test/test.js",
     "build": "node tools/build-html.js"
   },

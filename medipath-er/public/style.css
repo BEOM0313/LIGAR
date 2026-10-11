@@ -129,3 +129,36 @@ legend { font-size: 13px; font-weight: 800; padding: 0 6px }
 .hnr-out { white-space: pre-wrap; font-family: var(--font); font-size: 13.5px; background: var(--soft); border-radius: 12px; padding: 12px 14px; margin: 12px 0 0; line-height: 1.6 }
 .hnr-out.err { color: var(--red) }
 .hnr-out[hidden] { display: none }
+/* 합친 기능: 자원 조정 · 연락 기록 · 대조표 · 타임라인 · 119 신고 도우미 · 현황판 */
+button.need { border: 0; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 700 }
+.need.off { background: #fff; color: var(--muted); border: 1px dashed var(--line2); text-decoration: line-through }
+.need-add { width: auto; font-size: 12.5px; padding: 3px 8px; border-radius: 8px }
+.linkbtn { border: 0; background: none; color: var(--blue); font-weight: 700; font-size: 12.5px; padding: 4px 6px; text-decoration: underline }
+.callrec { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px }
+.callrec .label { margin: 0 4px 0 0 }
+.ghost.sm { padding: 4px 10px; font-size: 13px; border-radius: 8px }
+.ghost.on-ok { background: var(--green-tint); border-color: var(--green); color: var(--green) }
+.ghost.on-no { background: var(--red-tint); border-color: var(--red); color: var(--red) }
+.notice { background: var(--amber-bg); color: #713F12; display: grid; gap: 4px; position: relative }
+.notice .linkbtn { position: absolute; top: 12px; right: 14px }
+.cmp summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px }
+.cmp .cap { margin: 0 }
+.cmp th small { display: block; font-weight: 500; color: var(--muted) }
+.cmp tr.ex td { color: var(--muted) } .cmp tr.ex td b { font-weight: 600 }
+.board .n-must { color: var(--red); font-weight: 800 }
+.tl { display: grid; gap: 10px; margin-top: 12px }
+.tl-row { display: grid; grid-template-columns: minmax(0, 170px) 1fr auto; gap: 10px; align-items: center; font-size: 13.5px }
+.tl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700 }
+.tl-track { min-width: 0 }
+.tl-bar { display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--soft) }
+.tl-bar i { font-style: normal; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; min-width: 0; color: #fff }
+.tl-bar .go { background: #64748B } .tl-bar .go.best { background: var(--green) } .tl-bar .eval { background: #D97706 } .tl-bar .prep { background: #B45309 }
+.call119 { border-left: 6px solid var(--red) }
+.script { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 8px }
+.script .label { display: inline-block; margin: 0 8px 0 0; min-width: 48px }
+.board-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px }
+.board-tools input { flex: 1 1 220px; width: auto } .board-tools select { width: auto }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--line2); vertical-align: 1px }
+.dot.ok { background: var(--green) } .dot.busy { background: #F59E0B } .dot.full { background: var(--red) }
+.mk.c-ok { border-color: var(--green) } .mk.c-busy { border-color: #F59E0B } .mk.c-full { border-color: var(--red); background: var(--red-tint) }
+@media (max-width: 560px) { .tl-row { grid-template-columns: 1fr auto } .tl-track { grid-column: 1 / -1; grid-row: 2 } }

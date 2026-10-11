@@ -20,7 +20,7 @@ var TTL = { beds: 120e3, severe: 300e3, messages: 120e3, list: 864e5, nearby: 86
 
 function Client(opts) {
   this.key = String(opts.key || '').trim();
-  this.demo = !!opts.demo || !this.key;
+  this.demo = !!opts.demo; // 테스트 전용: fixtures 응답 사용
   this.limit = +(opts.limit || 950); // 포털 개발계정 기능별 1,000건/일 · 여유 50건
   this.fetchText = opts.fetchText;
   this.loadFixture = opts.loadFixture || function () { return null; };
@@ -54,10 +54,11 @@ Client.prototype.call = async function (opName, params) {
   if (this.demo) {
     var xml = this.loadFixture(opName);
     if (xml == null) return { ok: true, items: [], totalCount: 0, demo: true };
-    // 가상 데이터의 갱신 시각은 '지금으로부터 N분 전'으로 채운다
+    // 테스트 데이터의 갱신 시각은 '지금으로부터 N분 전'으로 채운다
     data = parseResponse(xml.replace(/__NOW_MINUS_(\d+)__/g, function (_, m) { return stamp(new Date(Date.now() - m * 60e3)); })); data.demo = true;
     if (data.ok && opName !== 'nearby' && opName !== 'traumaNearby') data.items = filterDemo(data.items, params, this.demoAddr());
   } else {
+    if (!this.key) return { ok: false, code: 'NOKEY', message: '공공데이터포털 인증키가 설정되지 않았습니다' };
     if ((this.calls[op] || 0) >= this.limit) {
       if (hit) return Object.assign({ cached: true, stale: true, fetchedAt: hit.at }, hit.data);
       return { ok: false, code: 'LIMIT', message: '오늘 호출 한도에 도달했습니다 (' + op + ')' };
@@ -74,7 +75,7 @@ Client.prototype.call = async function (opName, params) {
   else if (hit) return Object.assign({ cached: true, stale: true, fetchedAt: hit.at, upstreamError: data.message }, hit.data);
   return Object.assign({ fetchedAt: Date.now() }, data);
 };
-// 병상·중증·메시지 응답에는 주소가 없어 가상 목록(list)의 주소로 지역을 거른다
+// 병상·중증·메시지 응답에는 주소가 없어 테스트 목록(list)의 주소로 지역을 거른다
 Client.prototype.demoAddr = function () {
   if (this._addr) return this._addr;
   var xml = this.loadFixture('list'), m = {};

@@ -118,7 +118,7 @@ test('사전 연락 문구', async function () {
 });
 
 test('서버: 가상 데이터로 /api/region · /api/nearby', async function () {
-  process.env.DEMO = '1';
+  process.env.MEDIPATH_TEST_FIXTURES = '1';
   var S = require('../server'); await new Promise(function (r) { S.server.listen(0, r); });
   var port = S.server.address().port;
   try {
@@ -227,7 +227,7 @@ test('MCP 도구: 응급처치 · 현장 평가 · 입력 오류', async functio
   assert.ok((await t.call('recommend_emergency_room', { condition: 'xx', lat: 1, lon: 1 })).isError);
 });
 test('MCP HTTP: POST /mcp JSON 응답 · 알림 202 · GET 405 · 일괄 요청', async function () {
-  process.env.DEMO = '1'; process.env.HERE_NOW_ER_MCP_URL = 'off';
+  process.env.MEDIPATH_TEST_FIXTURES = '1'; process.env.HERE_NOW_ER_MCP_URL = 'off';
   var S = require('../server'); if (!S.server.listening) await new Promise(function (r) { S.server.listen(0, r); });
   var base = 'http://127.0.0.1:' + S.server.address().port + '/mcp', H = { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' };
   try {
@@ -260,4 +260,9 @@ test('지금 여기 응급실 클라이언트: JSON · SSE 응답 · 도구 오�
     var d = await c.call('drug', { drugName: 'x' }); assert.strictEqual(d.ok, false);
     assert.strictEqual(calls[1].method, 'tools/call'); assert.strictEqual(calls[1].jsonrpc, '2.0');
   } finally { srv.close(); }
+});
+test('인증키가 없으면 가상 데이터로 바꾸지 않고 오류', async function () {
+  var c = new Client({ key: '' }); assert.strictEqual(c.demo, false);
+  var r = await c.call('beds', { STAGE1: '서울특별시', STAGE2: '강남구' });
+  assert.strictEqual(r.ok, false); assert.strictEqual(r.code, 'NOKEY');
 });

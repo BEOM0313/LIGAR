@@ -1,14 +1,16 @@
 'use strict';
 // 메디패스 응급실 연결 · 서버
 // - 공공데이터포털 인증키는 서버 환경변수(DATA_GO_KR_KEY)에만 둔다. 브라우저로 내려보내지 않는다.
-// - 키가 없거나 DEMO=1이면 fixtures/의 가상 데이터로 동작한다.
+// - 키가 없으면 시작하지 않는다. (MEDIPATH_TEST_FIXTURES=1은 자동 테스트 전용: fixtures/ 응답 사용)
 var http = require('http'), fs = require('fs'), path = require('path'), url = require('url');
 var Client = require('./lib/api').Client, Service = require('./lib/service').Service;
 var MCP = require('./lib/mcp'), HNR = require('./lib/hnr'), Router = require('./public/route').Router;
 
 loadEnv(path.join(__dirname, '.env'));
 var PORT = +(process.env.PORT || 8080);
-var client = new Client({ key: process.env.DATA_GO_KR_KEY || '', demo: process.env.DEMO === '1' });
+var TEST = process.env.MEDIPATH_TEST_FIXTURES === '1';
+var KEY = String(process.env.DATA_GO_KR_KEY || '').trim(); if (/여기에/.test(KEY)) KEY = ''; // .env.example 자리표시 그대로면 키 없음
+var client = new Client({ key: KEY, demo: TEST });
 var service = new Service(client, { basicPerRegion: +(process.env.BASIC_PER_REGION || 40) });
 // 메디패스 자체 MCP 도구 (POST /mcp) · 오픈스트리트맵 길찾기는 서버에서도 같은 모듈을 쓴다
 var tools = new MCP.Tools({ service: service, router: new Router({}) });
@@ -72,7 +74,7 @@ var server = http.createServer(async function (req, res) {
       if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version' }); return res.end(); }
       return await MCP.serveHttp(tools, req, res, await readBody(req));
     }
-    if (u.pathname === '/healthz') return json(res, 200, { ok: true, service: 'medipath-er', demo: client.demo, hereNowEr: HNR_URL === 'off' ? null : HNR_URL });
+    if (u.pathname === '/healthz') return json(res, 200, { ok: true, service: 'medipath-er', testData: client.demo, hereNowEr: HNR_URL === 'off' ? null : HNR_URL });
     if (u.pathname.indexOf('/api/') === 0) return await handleApi(u.pathname, u.query, res);
     var file = path.normalize(path.join(__dirname, 'public', u.pathname === '/' ? 'index.html' : u.pathname));
     if (file.indexOf(path.join(__dirname, 'public')) !== 0 || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('not found'); }
@@ -80,5 +82,8 @@ var server = http.createServer(async function (req, res) {
     fs.createReadStream(file).pipe(res);
   } catch (e) { json(res, 500, { ok: false, message: e.message }); }
 });
-if (require.main === module) server.listen(PORT, function () { console.log('메디패스 응급실 연결: http://localhost:' + PORT + (client.demo ? '  (DEMO: 가상 데이터)' : '  (공공데이터포털 연동)')); console.log('MCP 엔드포인트: http://localhost:' + PORT + '/mcp · 지금 여기 응급실 연동: ' + HNR_URL); });
+if (require.main === module) {
+  if (!client.key && !TEST) { console.error('DATA_GO_KR_KEY가 없습니다. .env.example을 .env로 복사하고 공공데이터포털 인증키를 넣으세요.'); process.exit(1); }
+  server.listen(PORT, function () { console.log('메디패스 응급실 연결: http://localhost:' + PORT + (TEST ? '  (테스트 데이터)' : '  (공공데이터포털 실시간)')); console.log('MCP 엔드포인트: http://localhost:' + PORT + '/mcp · 지금 여기 응급실 연동: ' + HNR_URL); });
+}
 module.exports = { server: server, client: client, tools: tools };

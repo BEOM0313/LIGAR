@@ -104,7 +104,7 @@ Tools.prototype.recommend = async function (a) {
   var grade = L.refGrade(p), critical = grade.grade <= 2 || ['arrest', 'stroke', 'chest', 'trauma', 'anaphylaxis'].indexOf(p.condition) >= 0;
   var needs = L.needsFor(p), m = L.match(hs, needs, loc.origin || null, { routes: routes, timeCritical: critical });
   var max = Math.min(5, a.limit || 3), out = [];
-  out.push('🚑 메디패스 응급실 추천 — ' + L.conditionLabel(p.condition) + (p.age != null ? ', ' + p.age + '세' : '') + (d.demo ? ' [가상 데이터]' : ''));
+  out.push('🚑 메디패스 응급실 추천 — ' + L.conditionLabel(p.condition) + (p.age != null ? ', ' + p.age + '세' : '') + (d.demo ? ' [테스트 데이터]' : ''));
   out.push('출발지: ' + loc.label + ' · 조회 ' + kst());
   if (critical) out.push('☎️ 시간이 생명인 상황입니다. 직접 이동하지 말고 119에 신고하세요. 아래는 구급대·보호자 참고용입니다.');
   out.push('필요 자원: 필수 ' + (needs.filter(function (n) { return n.level === 'must'; }).map(function (n) { return L.RES[n.key].label; }).join(', ') || '없음') + ' / 선호 ' + needs.filter(function (n) { return n.level === 'pref'; }).map(function (n) { return L.RES[n.key].label; }).join(', '));
