@@ -1,0 +1,101 @@
+:root {
+  --bg: #F2F3F5; --card: #FFFFFF; --soft: #F4F5F7; --line: #E3E5E8; --line2: #D5D8DD;
+  --ink: #111827; --sub: #4B5563; --muted: #8A9099;
+  --red: #D93025; --red-tint: #FDEDEB; --amber-bg: #FEF3C7; --amber-ink: #A9440A; --green: #1E9E5A; --green-tint: #E3F6EA; --blue: #2563EB; --blue-tint: #EAF0FE;
+  --brand: #F5C518;
+  --font: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.55; letter-spacing: -0.2px; margin: 0; padding: 0 20px 56px }
+header, .banner, .where, .tabs, main { max-width: 1280px; margin-inline: auto }
+button, input, select { font: inherit; color: inherit; letter-spacing: inherit } button { cursor: pointer }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px }
+a { color: var(--blue) }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 20px 0 12px }
+.mark { display: flex; align-items: baseline; gap: 10px }
+.mark h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -1px }
+.mark h1 i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--brand); margin-left: 3px; transform: translateY(-12px) }
+.mark span { color: var(--sub); font-weight: 600 }
+.status { font-size: 13px; color: var(--sub) }
+.banner { background: var(--red-tint); color: #7F1D1D; border-radius: 12px; padding: 10px 16px; font-size: 13.5px; margin-top: 0 }
+.banner b, .banner a { color: var(--red); font-weight: 800 }
+.card { background: var(--card); border-radius: 18px; box-shadow: 0 1px 2px rgba(17,24,39,.05), 0 10px 28px -14px rgba(17,24,39,.18); padding: 20px; min-width: 0; margin-bottom: 14px }
+.cap { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px }
+.caption { font-size: 13px; color: var(--muted); margin: 6px 0 0 }
+.label { font-size: 12.5px; font-weight: 700; color: var(--sub); margin: 14px 0 6px }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--sub); min-width: 0 }
+input, select { background: #fff; border: 1px solid var(--line2); border-radius: 10px; padding: 8px 10px; width: 100%; min-width: 0; font-weight: 500; color: var(--ink) }
+.where-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 10px; align-items: end }
+.ghost { border: 1.5px solid var(--line2); background: #fff; border-radius: 10px; padding: 8px 14px; font-weight: 700; text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; justify-content: center }
+.cta { border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 800; padding: 12px 16px; text-decoration: none; display: inline-flex; align-items: center }
+.tabs { display: flex; gap: 6px; margin: 4px auto 14px; overflow-x: auto }
+.tabs button { border: 0; background: transparent; padding: 9px 16px; border-radius: 999px; font-weight: 800; color: var(--sub); white-space: nowrap }
+.tabs button[aria-selected="true"] { background: var(--ink); color: #fff }
+.grid2 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 14px; align-items: start }
+.grid2 > .card { margin-bottom: 0 }
+.sit { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-top: 12px }
+.case { text-align: left; border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 15px; font-weight: 700 }
+.case small { display: block; font-size: 12px; color: var(--red); font-weight: 700 }
+.case[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff } .case[aria-pressed="true"] small { color: #FCA5A5 }
+.decide { display: flex; justify-content: space-between; gap: 14px; align-items: center }
+.decide p { margin: 4px 0 0; color: var(--sub) }
+.big { font-size: 24px; font-weight: 900; letter-spacing: -0.6px }
+.alarm { border-top: 6px solid var(--red) } .alarm .big { color: var(--red) }
+.go { border-top: 6px solid var(--brand) }
+.call { flex: none; background: var(--red); color: #fff; font-weight: 900; font-size: 26px; border-radius: 16px; padding: 14px 22px; text-decoration: none; font-family: var(--mono) }
+.steps, .dont, .limits, .refs { margin: 0; padding-left: 22px } .steps li, .limits li, .refs li { margin: 6px 0 }
+.dont li { color: var(--red); margin: 4px 0 }
+.chks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px }
+.chk { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; color: var(--ink); font-size: 14px; background: var(--soft); border-radius: 10px; padding: 7px 10px }
+.chk input { width: auto; margin: 0 }
+.age { flex-direction: row; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px } .age input { width: 90px }
+.sub { margin: 18px 0 8px } .sub .caption { margin-top: 0 }
+.f3, .f5 { display: grid; gap: 8px; margin-bottom: 8px }
+.f3 { grid-template-columns: repeat(3, minmax(0, 1fr)) } .f5 { grid-template-columns: repeat(5, minmax(0, 1fr)) }
+form > label { margin-bottom: 8px }
+fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; margin: 12px 0 0 }
+legend { font-size: 13px; font-weight: 800; padding: 0 6px }
+.gradebox { display: flex; gap: 16px; align-items: center; border-radius: 14px; padding: 14px 16px; background: var(--soft) }
+.gradebox b { display: block; font-size: 44px; font-weight: 900; font-family: var(--mono); line-height: 1 }
+.gradebox ul { margin: 0; padding-left: 18px; font-size: 14px }
+.gradebox .label { margin: 0; white-space: nowrap }
+.g1 { background: var(--red-tint) } .g1 b { color: var(--red) } .g2 { background: #FFEDD5 } .g2 b { color: #C2410C } .g3 { background: var(--amber-bg) } .g3 b { color: var(--amber-ink) } .g4 b, .g5 b { color: var(--green) } .g4, .g5 { background: var(--green-tint) }
+.ft { margin-top: 10px; border-radius: 12px; padding: 10px 14px; font-size: 14px } .ft.red { background: var(--red-tint); color: #7F1D1D } .ft.yellow { background: var(--amber-bg); color: #713F12 }
+.cells { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px }
+.ck, .need, .pill { font-size: 12.5px; font-weight: 700; border-radius: 8px; padding: 4px 9px; white-space: nowrap }
+.ck small, .need small { font-weight: 600; opacity: .7 }
+.ok { background: var(--green-tint); color: var(--green) } .no { background: var(--red-tint); color: var(--red) } .unk, .alt { background: var(--amber-bg); color: var(--amber-ink) } .off { background: var(--soft); color: var(--muted) }
+.need.must { background: var(--ink); color: #fff } .need.pref { background: var(--soft); color: var(--sub) }
+.pill { display: inline-block }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px }
+.hosp { background: var(--card); border-radius: 18px; padding: 18px 20px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(17,24,39,.05) }
+.hosp.first { border: 2.5px solid var(--ink); box-shadow: 0 10px 28px -14px rgba(17,24,39,.3) }
+.hhead { display: flex; justify-content: space-between; gap: 12px }
+.hhead h3 { margin: 4px 0 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px }
+.tagline { display: inline-block; background: var(--brand); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 900 }
+.eta { text-align: right; flex: none } .eta b { display: block; font-size: 32px; font-weight: 900; line-height: 1 } .eta b small { font-size: 14px; margin-left: 2px } .eta span { font-size: 12px; color: var(--muted) }
+.notes { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--sub) } .notes .msg { color: var(--red); font-weight: 700 }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px }
+.pre { margin-top: 12px; background: var(--soft); border-radius: 12px; padding: 10px 14px }
+.pre summary { font-weight: 800; font-size: 13.5px; cursor: pointer }
+.pre pre { white-space: pre-wrap; font-family: var(--font); font-size: 13.5px; margin: 8px 0 }
+.compare { background: var(--blue-tint); color: #1E3A8A; font-size: 14px }
+.excl summary { font-weight: 800; cursor: pointer } .excl ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: var(--sub) }
+.tablewrap { overflow-x: auto; margin-top: 10px }
+.board { border-collapse: collapse; width: 100%; font-size: 13.5px }
+.board th { text-align: left; font-size: 12px; color: var(--sub); font-weight: 700; padding: 8px; border-bottom: 1px solid var(--line2); white-space: nowrap }
+.board td { padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top }
+.board td small { display: block; color: var(--muted); font-size: 11.5px }
+.board td.m { white-space: normal; min-width: 200px; color: var(--red); font-size: 12.5px }
+.board .y { color: var(--green) } .board .n { color: var(--muted) } .board .u { color: var(--amber-ink) } .board .neg { color: var(--red); font-weight: 700 }
+.board td.stale { color: var(--amber-ink); font-weight: 700 }
+.limits li b { color: var(--ink) } .limits { color: var(--sub); font-size: 14px } .refs { font-size: 14px }
+@media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0, 1fr) } .f5 { grid-template-columns: repeat(3, minmax(0, 1fr)) } }
+@media (max-width: 560px) {
+  body { padding: 0 16px 48px }
+  .where-row { grid-template-columns: 1fr 1fr } .where-row button { grid-column: span 1 }
+  .decide { flex-direction: column; align-items: stretch } .call { text-align: center }
+  .f3 { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .big { font-size: 21px } .hhead h3 { font-size: 18px } .eta b { font-size: 26px }
+}

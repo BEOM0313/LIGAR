@@ -1,0 +1,14 @@
+{
+  "name": "medipath-er",
+  "version": "0.1.0",
+  "private": true,
+  "description": "메디패스 응급실 연결: 국립중앙의료원 실시간 응급실 정보와 환자 상태를 연결해 갈 병원을 추천",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "DEMO=1 node server.js",
+    "test": "node --test test/test.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}

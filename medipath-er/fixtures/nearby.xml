@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items>
+<item><cnt>1</cnt><distance>0.39</distance><dutyAddr>서울특별시 강남구 예시대로 202</dutyAddr><dutyDivName>지역응급의료센터</dutyDivName><dutyName>가상메디컬센터</dutyName><dutyTel1>02-0000-2001</dutyTel1><hpid>A0000002</hpid><latitude>37.495</latitude><longitude>127.03</longitude></item>
+<item><cnt>1</cnt><distance>0.97</distance><dutyAddr>서울특별시 서초구 예시로 55</dutyAddr><dutyDivName>지역응급의료기관</dutyDivName><dutyName>가상연합의원</dutyName><dutyTel1>02-0000-5001</dutyTel1><hpid>A0000005</hpid><latitude>37.49</latitude><longitude>127.023</longitude></item>
+<item><cnt>1</cnt><distance>1.49</distance><dutyAddr>서울특별시 강남구 샘플길 33</dutyAddr><dutyDivName>지역응급의료기관</dutyDivName><dutyName>가상어린이병원</dutyName><dutyTel1>02-0000-3001</dutyTel1><hpid>A0000003</hpid><latitude>37.51</latitude><longitude>127.035</longitude></item>
+<item><cnt>1</cnt><distance>1.90</distance><dutyAddr>서울특별시 강남구 가상로 101</dutyAddr><dutyDivName>권역응급의료센터</dutyDivName><dutyName>가상대학교병원</dutyName><dutyTel1>02-0000-1001</dutyTel1><hpid>A0000001</hpid><latitude>37.5035</latitude><longitude>127.048</longitude></item>
+<item><cnt>1</cnt><distance>1.90</distance><dutyAddr>서울특별시 서초구 테스트로 404</dutyAddr><dutyDivName>권역응급의료센터</dutyDivName><dutyName>서초가상권역외상센터병원</dutyName><dutyTel1>02-0000-4001</dutyTel1><hpid>A0000004</hpid><latitude>37.484</latitude><longitude>127.015</longitude></item>
+<item><cnt>1</cnt><distance>2.15</distance><dutyAddr>서울특별시 서초구 모의길 66</dutyAddr><dutyDivName>지역응급의료기관</dutyDivName><dutyName>가상여성아이병원</dutyName><dutyTel1>02-0000-6001</dutyTel1><hpid>A0000006</hpid><latitude>37.479</latitude><longitude>127.033</longitude></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>6</totalCount></body></response>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>메디패스 응급실 연결</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="mark"><h1>메디패스<i></i></h1><span>응급실 연결</span></div>
+  <div class="status" id="status">불러오는 중…</div>
+</header>
+<p class="banner"><b>참고용 정보입니다.</b> 생명이 위급하면 망설이지 말고 <a href="tel:119">119</a>에 전화하세요. 병원 정보는 국립중앙의료원 실시간 자료이며, 병원 사정으로 실제와 다를 수 있습니다.</p>
+
+<section class="card where">
+  <div class="where-row">
+    <label>시도<select id="sido"></select></label>
+    <label>시군구<input id="sigungu" list="gu-list" placeholder="예: 강남구"></label>
+    <button id="btn-region" class="ghost">지역으로 조회</button>
+    <button id="btn-geo" class="ghost">현재 위치로 조회</button>
+  </div>
+  <p class="caption" id="where-note"></p>
+</section>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="public" aria-selected="true">일반인</button>
+  <button role="tab" data-tab="ems" aria-selected="false">119 구급대</button>
+  <button role="tab" data-tab="board" aria-selected="false">응급실 현황</button>
+  <button role="tab" data-tab="refs" aria-selected="false">근거 · 한계</button>
+</nav>
+
+<main>
+  <!-- 일반인 -->
+  <section id="tab-public" class="tab">
+    <div class="card">
+      <div class="cap">어떤 상황인가요?</div>
+      <p class="caption">상황을 고르면 지금 할 일과 갈 곳을 알려 드립니다.</p>
+      <div class="sit" id="sit"></div>
+    </div>
+    <div id="pub-out"></div>
+  </section>
+
+  <!-- 119 -->
+  <section id="tab-ems" class="tab" hidden>
+    <div class="grid2">
+      <form class="card" id="ems-form" autocomplete="off">
+        <div class="cap">환자 평가</div>
+        <div class="f3">
+          <label>나이<input name="age" type="number" min="0" max="120" inputmode="numeric"></label>
+          <label>성별<select name="sex"><option value="">-</option><option>남</option><option>여</option></select></label>
+          <label>주 분류<select name="condition" id="cond"></select></label>
+        </div>
+        <label>주호소 (자유 입력)<input name="ccText" placeholder="예: 우하복부 통증 2일, 구토"></label>
+        <div class="label">활력징후</div>
+        <div class="f5">
+          <label>수축기<input name="sbp" type="number" inputmode="numeric"></label>
+          <label>이완기<input name="dbp" type="number" inputmode="numeric"></label>
+          <label>맥박<input name="hr" type="number" inputmode="numeric"></label>
+          <label>호흡<input name="rr" type="number" inputmode="numeric"></label>
+          <label>SpO₂<input name="spo2" type="number" inputmode="numeric"></label>
+          <label>체온<input name="temp" type="number" step="0.1" inputmode="decimal"></label>
+          <label>GCS<input name="gcs" type="number" min="3" max="15" inputmode="numeric"></label>
+          <label>GCS 운동<input name="gcsMotor" type="number" min="1" max="6" inputmode="numeric"></label>
+          <label>통증 NRS<input name="pain" type="number" min="0" max="10" inputmode="numeric"></label>
+        </div>
+        <label class="chk"><input type="checkbox" name="noPulse"> 심정지 · 무호흡</label>
+
+        <fieldset data-for="trauma bleeding burn" hidden>
+          <legend>2021 현장 외상 분류 · 손상 (Red)</legend>
+          <div class="chks">
+            <label class="chk"><input type="checkbox" name="inj.penetrating"> 머리·목·몸통·근위부 관통상</label>
+            <label class="chk"><input type="checkbox" name="inj.skull"> 두개골 변형·함몰</label>
+            <label class="chk"><input type="checkbox" name="inj.chestWall"> 흉벽 불안정</label>
+            <label class="chk"><input type="checkbox" name="inj.longBones"> 근위부 긴뼈 2곳↑ 골절</label>
+            <label class="chk"><input type="checkbox" name="inj.crush"> 으깨짐·벗겨짐·맥박 없는 사지</label>
+            <label class="chk"><input type="checkbox" name="inj.amputation"> 손목·발목 근위부 절단</label>
+            <label class="chk"><input type="checkbox" name="inj.pelvis"> 골반 골절 의심</label>
+            <label class="chk"><input type="checkbox" name="inj.paralysis"> 새로운 마비</label>
+            <label class="chk"><input type="checkbox" name="inj.tourniquet"> 지혈대 필요 출혈</label>
+            <label class="chk"><input type="checkbox" name="respDistress"> 호흡곤란·환기 보조</label>
+          </div>
+          <div class="label">손상 기전 · 특수 고려 (Yellow)</div>
+          <div class="chks">
+            <label class="chk"><input type="checkbox" name="mech.ejection"> 차량 밖으로 튕겨 나감</label>
+            <label class="chk"><input type="checkbox" name="mech.deathSame"> 동승자 사망</label>
+            <label class="chk"><input type="checkbox" name="mech.fall"> 3m 이상 추락</label>
+            <label class="chk"><input type="checkbox" name="mech.intrusion"> 차체 심한 함몰</label>
+            <label class="chk"><input type="checkbox" name="mech.extrication"> 20분↑ 구조 지연</label>
+            <label class="chk"><input type="checkbox" name="mech.pedestrian"> 보행자·자전거 충돌</label>
+            <label class="chk"><input type="checkbox" name="mech.motorcycle"> 시속 30km↑ 이륜차</label>
+            <label class="chk"><input type="checkbox" name="mech.childUnrestrained"> 보호장구 없는 9세 이하</label>
+            <label class="chk"><input type="checkbox" name="headInjury"> 머리 손상</label>
+            <label class="chk"><input type="checkbox" name="anticoag"> 항응고제 복용</label>
+            <label class="chk"><input type="checkbox" name="pregnant20"> 임신 20주 이상</label>
+            <label class="chk"><input type="checkbox" name="amputation"> 절단 (접합 필요)</label>
+            <label class="chk"><input type="checkbox" name="burns"> 화상 동반</label>
+          </div>
+        </fieldset>
+
+        <fieldset data-for="stroke" hidden>
+          <legend>RACE 척도 (5점 이상 대혈관폐색 의심)</legend>
+          <div class="f3">
+            <label>안면마비<select name="race.face"><option value="0">0 없음</option><option value="1">1 경도</option><option value="2">2 중등도~심함</option></select></label>
+            <label>팔 운동<select name="race.arm"><option value="0">0 정상</option><option value="1">1 중력 이김</option><option value="2">2 중력 못 이김</option></select></label>
+            <label>다리 운동<select name="race.leg"><option value="0">0 정상</option><option value="1">1 중력 이김</option><option value="2">2 중력 못 이김</option></select></label>
+            <label>시선 편위<select name="race.gaze"><option value="0">0 없음</option><option value="1">1 있음</option></select></label>
+            <label>실어·인지<select name="race.cortical"><option value="0">0 정상</option><option value="1">1 한 가지</option><option value="2">2 두 가지</option></select></label>
+            <label>최종정상 (분 전)<input name="lkwMin" type="number" min="0" inputmode="numeric"></label>
+          </div>
+        </fieldset>
+        <fieldset data-for="chest aortic" hidden>
+          <legend>흉통</legend>
+          <div class="chks">
+            <label class="chk"><input type="checkbox" name="stemi"> 12유도 심전도 STEMI</label>
+            <label class="chk"><input type="checkbox" name="tearing"> 찢어지는 흉통·등 통증</label>
+            <label class="chk"><input type="checkbox" name="abdominal"> 복부 대동맥 의심</label>
+          </div>
+        </fieldset>
+        <fieldset data-for="burn" hidden>
+          <legend>화상</legend>
+          <div class="chks"><label class="chk"><input type="checkbox" name="severeBurn"> 중증 화상</label><label class="chk"><input type="checkbox" name="inhalation"> 흡입 화상 의심</label></div>
+        </fieldset>
+        <fieldset data-for="respiratory" hidden><legend>호흡</legend><label class="chk"><input type="checkbox" name="infectious"> 감염병 의심 (격리 필요)</label></fieldset>
+        <fieldset data-for="obstetric" hidden><legend>산과</legend><label class="chk"><input type="checkbox" name="preterm"> 조산 (37주 미만)</label></fieldset>
+      </form>
+      <div id="ems-out"></div>
+    </div>
+  </section>
+
+  <!-- 현황판 -->
+  <section id="tab-board" class="tab" hidden>
+    <div class="card">
+      <div class="cap">응급실 실시간 현황</div>
+      <p class="caption" id="board-note"></p>
+      <div class="tablewrap"><table class="board" id="board"></table></div>
+    </div>
+  </section>
+
+  <!-- 근거 -->
+  <section id="tab-refs" class="tab" hidden>
+    <div class="grid2">
+      <div class="card"><div class="cap">근거 자료</div><ol class="refs" id="refs"></ol></div>
+      <div class="card">
+        <div class="cap">한계와 주의</div>
+        <ul class="limits">
+          <li><b>당직 전문의 정보는 API에 없습니다.</b> 진료과목(기관 기본정보), 중증질환 수용 가능 여부, 병원 메시지로 대신 판단합니다. 사전 연락으로 꼭 확인해야 합니다.</li>
+          <li><b>‘참고 등급’은 KTAS·Pre-KTAS 공식 판정이 아닙니다.</b> 공식 판정표는 사용 허가가 필요해 공개 연구의 생리학적 기준을 단순화했습니다. 실제 분류는 교육받은 구급대원·의료진이 공식 도구로 합니다.</li>
+          <li><b>병원 정보는 병원이 직접 입력합니다.</b> 갱신이 늦을 수 있어 30분 넘은 정보는 표시하고 순위에서 불리하게 둡니다.</li>
+          <li><b>도착 예상 시간은 직선거리 추정치</b>입니다 (우회 계수 1.3, 평균 시속 40km). 실제 도로 상황과 다릅니다.</li>
+          <li><b>119 이송 병원 선정 권한은 구급대·상황실에 있습니다.</b> 일반인 화면의 병원 목록은 스스로 갈 수 있는 경증·준응급 상황용 참고입니다.</li>
+          <li><b>의료기기 소프트웨어(SaMD) 해당 여부</b>는 식품의약품안전처 검토가 필요합니다. 실제 운영 전에 확인해야 합니다.</li>
+          <li><b>공공데이터포털 개발계정은 기능별 하루 1,000건</b>까지입니다. 서버가 응답을 몇 분씩 저장해 호출을 줄이며, 실서비스는 운영계정 신청이 필요합니다.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+<datalist id="gu-list"></datalist>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items>
+<item><emcOrgCod>A0000001</emcOrgCod><hpid>A0000001</hpid><dutyName>가상대학교병원</dutyName><symBlkMsg>소아 응급 위장관 내시경 불가 (담당의 부재)</symBlkMsg><symBlkMsgTyp>중증</symBlkMsgTyp><symTypCod>Y0120</symTypCod><symTypCodMag>[응급내시경] 영유아 위장관</symTypCodMag><symOutDspYon>Y</symOutDspYon><symBlkSttDtm>__NOW_MINUS_3__</symBlkSttDtm><symBlkEndDtm>29991231235959</symBlkEndDtm></item>
+<item><emcOrgCod>A0000002</emcOrgCod><hpid>A0000002</hpid><dutyName>가상메디컬센터</dutyName><symBlkMsg>신경과 전문의 부재로 뇌졸중 환자 수용 불가</symBlkMsg><symBlkMsgTyp>응급</symBlkMsgTyp><symTypCod>Y0020</symTypCod><symTypCodMag>[재관류중재술] 뇌경색</symTypCodMag><symOutDspYon>Y</symOutDspYon><symBlkSttDtm>__NOW_MINUS_3__</symBlkSttDtm><symBlkEndDtm>29991231235959</symBlkEndDtm></item>
+<item><emcOrgCod>A0000004</emcOrgCod><hpid>A0000004</hpid><dutyName>서초가상권역외상센터병원</dutyName><symBlkMsg>응급실 과밀로 경증 환자 장시간 대기 예상</symBlkMsg><symBlkMsgTyp>응급</symBlkMsgTyp><symTypCod>Y0000</symTypCod><symTypCodMag>응급실</symTypCodMag><symOutDspYon>Y</symOutDspYon><symBlkSttDtm>__NOW_MINUS_3__</symBlkSttDtm><symBlkEndDtm>29991231235959</symBlkEndDtm></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>3</totalCount></body></response>

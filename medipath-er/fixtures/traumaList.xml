@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items>
+<item><dutyAddr>서울특별시 서초구 테스트로 404</dutyAddr><dutyName>서초가상권역외상센터병원</dutyName><dutyTel3>02-0000-4119</dutyTel3><hpid>A0000004</hpid><wgs84Lat>37.484</wgs84Lat><wgs84Lon>127.015</wgs84Lon></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>1</totalCount></body></response>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items>
+<item><dgidIdName>내과,외과,소아청소년과,신경과,신경외과,흉부외과,정형외과,산부인과,영상의학과,마취통증의학과,응급의학과</dgidIdName><dutyAddr>서울특별시 강남구 가상로 101</dutyAddr><dutyName>가상대학교병원</dutyName><dutyTel3>02-0000-1119</dutyTel3><hpid>A0000001</hpid><hperyn>Y</hperyn><wgs84Lat>37.5035</wgs84Lat><wgs84Lon>127.048</wgs84Lon></item>
+<item><dgidIdName>내과,외과,정형외과,영상의학과,응급의학과</dgidIdName><dutyAddr>서울특별시 강남구 예시대로 202</dutyAddr><dutyName>가상메디컬센터</dutyName><dutyTel3>02-0000-2119</dutyTel3><hpid>A0000002</hpid><hperyn>Y</hperyn><wgs84Lat>37.495</wgs84Lat><wgs84Lon>127.03</wgs84Lon></item>
+<item><dgidIdName>소아청소년과,소아외과,영상의학과,마취통증의학과</dgidIdName><dutyAddr>서울특별시 강남구 샘플길 33</dutyAddr><dutyName>가상어린이병원</dutyName><dutyTel3>02-0000-3119</dutyTel3><hpid>A0000003</hpid><hperyn>Y</hperyn><wgs84Lat>37.51</wgs84Lat><wgs84Lon>127.035</wgs84Lon></item>
+<item><dgidIdName>내과,외과,소아청소년과,신경과,신경외과,흉부외과,정형외과,성형외과,영상의학과,응급의학과</dgidIdName><dutyAddr>서울특별시 서초구 테스트로 404</dutyAddr><dutyName>서초가상권역외상센터병원</dutyName><dutyTel3>02-0000-4119</dutyTel3><hpid>A0000004</hpid><hperyn>Y</hperyn><wgs84Lat>37.484</wgs84Lat><wgs84Lon>127.015</wgs84Lon></item>
+<item><dgidIdName>내과,가정의학과</dgidIdName><dutyAddr>서울특별시 서초구 예시로 55</dutyAddr><dutyName>가상연합의원</dutyName><dutyTel3>02-0000-5119</dutyTel3><hpid>A0000005</hpid><hperyn>Y</hperyn><wgs84Lat>37.49</wgs84Lat><wgs84Lon>127.023</wgs84Lon></item>
+<item><dgidIdName>산부인과,소아청소년과,마취통증의학과</dgidIdName><dutyAddr>서울특별시 서초구 모의길 66</dutyAddr><dutyName>가상여성아이병원</dutyName><dutyTel3>02-0000-6119</dutyTel3><hpid>A0000006</hpid><hperyn>Y</hperyn><wgs84Lat>37.479</wgs84Lat><wgs84Lon>127.033</wgs84Lon></item>
+</items><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>6</totalCount></body></response>
