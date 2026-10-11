@@ -1,2 +1,5 @@
 # court skill trial output
 .court/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
