@@ -41,8 +41,9 @@ function merge(region) {
   var byId = new Map();
   function get(id) { if (!byId.has(id)) byId.set(id, { hpid: id, beds: {}, equip: {}, severe: { flags: {}, ageNotes: {} }, messages: [], trauma: false }); return byId.get(id); }
   (region.list || []).forEach(function (l) {
-    var h = get(l.hpid); h.name = h.name || l.dutyname; h.addr = l.dutyaddr; h.type = l.dutyemclsname || null; h.typeCode = l.dutyemcls || null;
-    h.lat = num(l.wgs84lat || l.latitude); h.lon = num(l.wgs84lon || l.longitude); h.tel = l.dutytel1 || null; h.erTel = h.erTel || l.dutytel3 || null;
+    // 같은 병원이 지역 목록과 위치 기반 목록에 모두 나올 수 있으므로 비어 있는 값으로 덮어쓰지 않는다
+    var h = get(l.hpid); h.name = h.name || l.dutyname; h.addr = l.dutyaddr || h.addr; h.type = l.dutyemclsname || h.type || null; h.typeCode = l.dutyemcls || h.typeCode || null;
+    if (num(l.wgs84lat || l.latitude) != null) { h.lat = num(l.wgs84lat || l.latitude); h.lon = num(l.wgs84lon || l.longitude); } h.tel = l.dutytel1 || h.tel || null; h.erTel = h.erTel || l.dutytel3 || null;
   });
   (region.beds || []).forEach(function (b) { var h = get(b.hpid), n = hospitalFromBeds(b); Object.assign(h, { name: h.name || n.name, erTel: n.erTel || h.erTel, updated: n.updated, beds: n.beds, equip: n.equip, hasBeds: true }); });
   (region.severe || []).forEach(function (s) { var id = s.hpid || s.dutyname; if (!id) return; get(id).severe = severeFrom(s); get(id).hasSevere = true; });

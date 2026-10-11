@@ -53,6 +53,32 @@ npm test                    # 테스트
   ```
 - 지도 화면에는 오픈스트리트맵 저작자 표시(© OpenStreetMap 기여자)가 들어갑니다.
 
+### MCP 연결 · ‘지금 여기 응급실’과 함께 쓰기
+[지금 여기 응급실(here-now-er-mcp)](https://github.com/blottosicei/here-now-er-mcp)과 양방향으로 연결됩니다.
+
+**1) 메디패스도 MCP 서버입니다: `POST /mcp`**
+지금 여기 응급실과 같은 방식(Streamable HTTP · stateless · JSON 응답)이라, PlayMCP(카카오톡)에 나란히 등록하면 한 대화에서 두 서버의 도구를 같이 씁니다. 외부 패키지 없이 JSON-RPC를 직접 처리하며, 공식 MCP SDK 클라이언트(1.29)로 접속을 확인했습니다.
+
+| 도구 | 하는 일 | 지금 여기 응급실과의 역할 분담 |
+|---|---|---|
+| `recommend_emergency_room` | 환자 상태 → 필요한 시설·진료 대조 → 치료 가능한 응급실을 도로 기준 시간 순으로 추천, 부적합한 가까운 병원과 전원 지연 비교 | 저쪽 `find_emergency_rooms`는 병상 수 순 목록, 이쪽은 **환자에게 맞는 응급실** |
+| `first_aid_guide` | 상황별 119 필요 여부 · 할 일 · 하지 말 일 (근거 포함) | 저쪽에 없는 응급처치 |
+| `field_triage_119` | 2021 현장 외상 분류 · RACE · 참고 등급 · 사전연락 문구 | 구급대원용 |
+
+출발지는 `place`(주소·장소, 오픈스트리트맵 검색), `lat`/`lon`, `sido`+`sigungu` 중 하나로 줍니다.
+
+```bash
+curl -X POST http://localhost:8080/mcp -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"recommend_emergency_room","arguments":{"condition":"peds_abd","age":8,"place":"서초구청"}}}'
+```
+
+PlayMCP 등록 예시: 이름 `메디패스 응급실 연결`, 엔드포인트 `https://<배포 주소>/mcp`, 인증 없음(읽기 전용, 개인정보 저장 안 함).
+
+**2) 메디패스 화면이 지금 여기 응급실을 부릅니다**
+일반인 화면에서 119가 바로 필요한 상황이 아니면 ‘응급실까지는 아니라면’ 카드가 나오고, 서버가 지금 여기 응급실의 `find_open_hospitals`(아이면 소아청소년과) · `find_open_pharmacies` · `get_drug_info`를 대신 호출합니다 (`/api/hnr`).
+- 주소는 `.env`의 `HERE_NOW_ER_MCP_URL` (기본: 저장소 문서에 적힌 배포 주소 `http://210.109.60.53/mcp`, `off`면 끔).
+- 단일 HTML에서는 ‘메디패스 서버 경유’로 연결했을 때만 쓸 수 있습니다 (저쪽 서버가 브라우저 직접 호출을 허용하지 않기 때문).
+
 ### Claude Code 클라우드 환경에서 실행할 때
 기본 네트워크 정책이 `apis.data.go.kr`을 막습니다. 환경 설정 → Network access → Allowed domains에 `apis.data.go.kr`을 추가하세요.
 ([설정 방법](https://code.claude.com/docs/en/cloud-environments#network-access))
@@ -64,6 +90,8 @@ server.js            HTTP 서버 (정적 파일 + /api/*), .env 로딩
 lib/core.js          공공데이터포털 호출 · 캐시 · 기능별 일일 한도 · 장애 시 이전 자료 반환 (서버·HTML 공용)
 lib/api.js           Node용 연결 (fetch, fixtures 파일)
 lib/service.js       지역·위치 단위로 여러 오퍼레이션을 묶어 병원 목록 생성 (서버·HTML 공용)
+lib/mcp.js           메디패스 MCP 서버 (POST /mcp) · 도구 3종
+lib/hnr.js           지금 여기 응급실 MCP 클라이언트
 lib/xml.js           응답 XML 파서 (게이트웨이 오류 응답 포함)
 lib/normalize.js     여러 오퍼레이션 응답을 기관ID(hpid)로 합쳐 병원 모델 생성
 public/logic.js      판단 로직 (일반인 응급처치, 현장 외상 분류, RACE, 참고 등급, 필요 자원, 매칭, 사전연락 문구)

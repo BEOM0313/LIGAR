@@ -187,3 +187,77 @@ test('병원 메시지: 질환 분류가 다르면 감점하지 않음', async f
   var g = L.match(hs, L.needsFor({ condition: 'gi_bleed', age: 2 }), ORIGIN), all = g.ranked.concat(g.excluded);
   assert.ok(all.find(function (r) { return r.h.hpid === 'A0000001'; }).blocking.length > 0 || !all.find(function (r) { return r.h.hpid === 'A0000001'; }).eligible);
 });
+
+/* ── MCP: 메디패스 서버 (POST /mcp) · 지금 여기 응급실 클라이언트 ── */
+var MCPmod = require('../lib/mcp'), HNRmod = require('../lib/hnr'), http = require('http');
+function demoTools() {
+  var Service = require('../lib/service').Service;
+  var rt = fakeRouter(function (u) { var n = u.split('/table/v1/driving/')[1].split('?')[0].split(';').length; return { code: 'Ok', durations: [Array.from({ length: n }, function (_, i) { return i * 120; })], distances: [Array.from({ length: n }, function (_, i) { return i * 900; })] }; });
+  rt.search = function () { return Promise.resolve([{ name: '서초구청', addr: '서울특별시 서초구', lat: 37.4837, lon: 127.0327 }]); };
+  return new MCPmod.Tools({ service: new Service(new Client({ demo: true, fixtures: FIX })), router: rt });
+}
+test('MCP: initialize · tools/list · 알림 · 없는 메서드', async function () {
+  var t = demoTools();
+  var init = await MCPmod.handle(t, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'x', version: '1' } } });
+  assert.strictEqual(init.result.protocolVersion, '2025-03-26'); assert.strictEqual(init.result.serverInfo.name, 'medipath-er');
+  var unk = await MCPmod.handle(t, { jsonrpc: '2.0', id: 2, method: 'initialize', params: { protocolVersion: '1999-01-01' } });
+  assert.strictEqual(unk.result.protocolVersion, '2025-06-18');
+  var list = await MCPmod.handle(t, { jsonrpc: '2.0', id: 3, method: 'tools/list' });
+  assert.deepStrictEqual(list.result.tools.map(function (x) { return x.name; }), ['recommend_emergency_room', 'first_aid_guide', 'field_triage_119']);
+  list.result.tools.forEach(function (x) { assert.strictEqual(x.inputSchema.type, 'object'); assert.ok(x.annotations.readOnlyHint); });
+  assert.strictEqual(await MCPmod.handle(t, { jsonrpc: '2.0', method: 'notifications/initialized' }), null);
+  assert.strictEqual((await MCPmod.handle(t, { jsonrpc: '2.0', id: 4, method: 'resources/list' })).error.code, -32601);
+  assert.strictEqual((await MCPmod.handle(t, { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'nope' } })).error.code, -32602);
+});
+test('MCP 도구: 응급실 추천 (장소 검색 → 도로 기준 시간 · 부적합 병원 제외)', async function () {
+  var r = await demoTools().call('recommend_emergency_room', { condition: 'peds_abd', age: 8, place: '서초구청' });
+  var t = r.content[0].text;
+  assert.ok(!r.isError, t); assert.match(t, /출발지: 서초구청/); assert.match(t, /차량 \d+분 \(도로/); assert.match(t, /제외: .*가상연합의원/);
+  assert.match(t, /119/); assert.match(t, /KTAS/);
+});
+test('MCP 도구: 시간 민감 상황은 119 안내 · 도보 안내 없음', async function () {
+  var t = (await demoTools().call('recommend_emergency_room', { condition: 'chest', stemi: true, age: 60, lat: 37.4979, lon: 127.0276 })).content[0].text;
+  assert.match(t, /119에 신고하세요/); assert.doesNotMatch(t, /도보/);
+});
+test('MCP 도구: 응급처치 · 현장 평가 · 입력 오류', async function () {
+  var t = demoTools();
+  assert.match((await t.call('first_aid_guide', { situation: 'arrest' })).content[0].text, /119에 전화/);
+  assert.match((await t.call('field_triage_119', { condition: 'trauma', age: 40, sbp: 85, mechanism: ['fall'] })).content[0].text, /Red/);
+  assert.ok((await t.call('recommend_emergency_room', { condition: 'peds_abd' })).isError);
+  assert.ok((await t.call('recommend_emergency_room', { condition: 'xx', lat: 1, lon: 1 })).isError);
+});
+test('MCP HTTP: POST /mcp JSON 응답 · 알림 202 · GET 405 · 일괄 요청', async function () {
+  process.env.DEMO = '1'; process.env.HERE_NOW_ER_MCP_URL = 'off';
+  var S = require('../server'); if (!S.server.listening) await new Promise(function (r) { S.server.listen(0, r); });
+  var base = 'http://127.0.0.1:' + S.server.address().port + '/mcp', H = { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' };
+  try {
+    var a = await (await fetch(base, { method: 'POST', headers: H, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }) })).json();
+    assert.strictEqual(a.result.tools.length, 3);
+    assert.strictEqual((await fetch(base, { method: 'POST', headers: H, body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) })).status, 202);
+    assert.strictEqual((await fetch(base)).status, 405);
+    var batch = await (await fetch(base, { method: 'POST', headers: H, body: JSON.stringify([{ jsonrpc: '2.0', id: 1, method: 'ping' }, { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'first_aid_guide', arguments: { situation: 'burn' } } }]) })).json();
+    assert.strictEqual(batch.length, 2); assert.match(batch[1].result.content[0].text, /시원한/);
+    assert.strictEqual((await fetch(base, { method: 'POST', headers: H, body: '{bad' })).status, 400);
+  } finally { S.server.close(); }
+});
+test('지금 여기 응급실 클라이언트: JSON · SSE 응답 · 도구 오류', async function () {
+  var calls = [];
+  var srv = http.createServer(function (req, res) {
+    var b = ''; req.on('data', function (c) { b += c; }); req.on('end', function () {
+      var m = JSON.parse(b); calls.push(m);
+      var result = m.method === 'tools/list' ? { tools: [{ name: 'find_open_pharmacies' }] } : { content: [{ type: 'text', text: '💊 ' + m.params.name + ' ' + JSON.stringify(m.params.arguments) }], isError: m.params.name === 'get_drug_info' };
+      var body = JSON.stringify({ jsonrpc: '2.0', id: m.id, result: result });
+      if (m.params && m.params.arguments && m.params.arguments.sse) { res.writeHead(200, { 'Content-Type': 'text/event-stream' }); res.end('event: message\ndata: ' + body + '\n\n'); }
+      else { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(body); }
+    });
+  });
+  await new Promise(function (r) { srv.listen(0, r); });
+  var c = new HNRmod.Client({ url: 'http://127.0.0.1:' + srv.address().port + '/mcp' });
+  try {
+    assert.strictEqual((await c.listTools())[0].name, 'find_open_pharmacies');
+    var p = await c.call('pharmacies', { sido: '서울', sigungu: '강남구' }); assert.ok(p.ok); assert.match(p.text, /find_open_pharmacies.*강남구/);
+    var s = await c.call('hospitals', { sido: '서울', sse: true }); assert.match(s.text, /find_open_hospitals/);
+    var d = await c.call('drug', { drugName: 'x' }); assert.strictEqual(d.ok, false);
+    assert.strictEqual(calls[1].method, 'tools/call'); assert.strictEqual(calls[1].jsonrpc, '2.0');
+  } finally { srv.close(); }
+});

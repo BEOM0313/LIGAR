@@ -125,3 +125,7 @@ legend { font-size: 13px; font-weight: 800; padding: 0 6px }
 .mk.ex { border-color: var(--line2); color: var(--muted); background: var(--soft); opacity: .85 }
 .eta span { display: block }
 @media (max-width: 560px) { #map { height: 260px } }
+.hnr .actions { margin-top: 10px }
+.hnr-out { white-space: pre-wrap; font-family: var(--font); font-size: 13.5px; background: var(--soft); border-radius: 12px; padding: 12px 14px; margin: 12px 0 0; line-height: 1.6 }
+.hnr-out.err { color: var(--red) }
+.hnr-out[hidden] { display: none }

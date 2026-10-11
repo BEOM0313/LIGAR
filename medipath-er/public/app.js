@@ -19,7 +19,9 @@
   // 데이터 출처: 기본은 같은 서버의 /api, 단일 HTML에서는 window.MPSource(직접 호출·프록시·가상)로 바뀐다
   var serverSource = {
     region: function (sido, gu) { return fetch('/api/region?sido=' + encodeURIComponent(sido) + '&sigungu=' + encodeURIComponent(gu)).then(function (r) { return r.json(); }); },
-    nearby: function (lat, lon) { return fetch('/api/nearby?lat=' + lat + '&lon=' + lon).then(function (r) { return r.json(); }); }
+    nearby: function (lat, lon) { return fetch('/api/nearby?lat=' + lat + '&lon=' + lon).then(function (r) { return r.json(); }); },
+    // '지금 여기 응급실' MCP (문 연 병·의원 · 약국 · 의약품) — 서버가 대신 호출한다
+    hnr: function (q) { return fetch('/api/hnr?' + Object.keys(q).filter(function (k) { return q[k] != null && q[k] !== ''; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&')).then(function (r) { return r.json(); }); }
   };
   function source() { return window.MPSource || serverSource; }
   function load(req, note) {
@@ -170,7 +172,7 @@
   /* ── 일반인 ── */
   function renderSituations() {
     $('#sit').innerHTML = Object.keys(L.PUBLIC).map(function (k) { var s = L.PUBLIC[k]; return '<button class="case" data-sit="' + k + '" aria-pressed="false">' + esc(s.title) + (s.call === 'now' ? '<small>즉시 119</small>' : '') + '</button>'; }).join('');
-    $('#sit').addEventListener('click', function (e) { var b = e.target.closest('[data-sit]'); if (!b) return; S.pub = { key: b.dataset.sit, flags: {}, age: S.pub && S.pub.age }; $$('#sit .case').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderPublic(); });
+    $('#sit').addEventListener('click', function (e) { var b = e.target.closest('[data-sit]'); if (!b) return; S.pub = { key: b.dataset.sit, flags: {}, age: S.pub && S.pub.age }; S.hnrOut = null; $$('#sit .case').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderPublic(); });
   }
   function renderPublic() {
     var out = $('#pub-out'); if (!S.pub) { out.innerHTML = ''; return; }
@@ -184,12 +186,35 @@
     if (s.dont && s.dont.length) html += '<div class="label">하지 마세요</div><ul class="dont">' + s.dont.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
     html += '<p class="caption">근거: ' + s.refs.map(function (r) { return '<a target="_blank" rel="noopener" href="' + esc(L.REFS[r].u) + '">' + esc(L.REFS[r].t) + '</a>'; }).join(' · ') + '</p>';
     html += '<label class="age">환자 나이 <input type="number" id="pub-age" min="0" max="120" value="' + esc(S.pub.age == null ? '' : S.pub.age) + '" inputmode="numeric"> 세</label></div>';
+    if (!now) html += hnrCard();
     html += '<div class="sub">' + (now ? '<div class="cap">참고: 이 상황을 받을 수 있는 근처 응급실</div><p class="caption">병원 선정은 구급대가 합니다. 아래는 보호자 참고용입니다.</p>' : '<div class="cap">갈 수 있는 응급실</div>') + '</div><div id="pub-match"></div>';
     out.innerHTML = html;
     var p = { condition: s.condition, age: S.pub.age };
     if (s.condition === 'bleeding' && S.pub.flags[1]) p.amputation = true;
     if (s.condition === 'burn' && flagged) p.severeBurn = true;
     renderMatch($('#pub-match'), p, { timeCritical: now });
+  }
+
+  /* ── 지금 여기 응급실 (here-now-er MCP) 연동 ── */
+  function hnrRegion() {
+    var r = (S.regions[0] || '').split(' ');
+    return r.length >= 2 ? { sido: r[0], sigungu: r[1] } : { sido: $('#sido').value, sigungu: $('#sigungu').value.trim() };
+  }
+  function hnrCard() {
+    var child = S.pub && S.pub.age != null && S.pub.age < 15, rg = hnrRegion();
+    return '<div class="card hnr"><div class="cap">응급실까지는 아니라면</div><p class="caption">경고 증상이 없으면 지금 문 연 병·의원이나 약국도 방법입니다. ' + esc(rg.sido + ' ' + rg.sigungu) + ' 기준 · ‘지금 여기 응급실’ MCP 연동</p>' +
+      '<div class="actions"><button class="ghost" data-hnr="hospitals"' + (child ? ' data-dept="소아청소년과"' : '') + '>지금 진료 중인 ' + (child ? '소아청소년과' : '병·의원') + '</button><button class="ghost" data-hnr="pharmacies">지금 문 연 약국</button></div>' +
+      '<form class="search-row hnr-drug"><label>집에 있는 약 확인 (e약은요)<input name="drug" placeholder="예: 타이레놀"></label><button class="ghost" type="submit">찾기</button></form>' +
+      (S.hnrOut ? '<pre class="hnr-out' + (S.hnrOut.ok ? '' : ' err') + '">' + esc(S.hnrOut.text) + '</pre>' : '<pre class="hnr-out" hidden></pre>') + '</div>';
+  }
+  function hnrRun(q, out) {
+    var src = source();
+    out.hidden = false;
+    if (!src.hnr) { out.textContent = '이 연결 방식에서는 쓸 수 없습니다. ‘메디패스 서버 경유’로 연결하면 지금 여기 응급실의 병원·약국·의약품 정보를 함께 볼 수 있습니다.'; return; }
+    out.textContent = '지금 여기 응급실에 묻는 중…';
+    function show(text, ok) { S.hnrOut = { text: text, ok: ok }; var o = $('#pub-out .hnr-out') || out; o.hidden = false; o.textContent = text; o.classList.toggle('err', !ok); }
+    Promise.resolve(src.hnr(q)).then(function (d) { show(d.text || d.message || '결과가 없습니다', !!d.ok); })
+      .catch(function (e) { show('지금 여기 응급실 서버에 연결할 수 없습니다: ' + e.message, false); });
   }
 
   /* ── 119 ── */
@@ -250,6 +275,14 @@
     $('#pub-out').addEventListener('change', function (e) {
       if (e.target.dataset.flag != null) { S.pub.flags[e.target.dataset.flag] = e.target.checked; renderPublic(); }
       if (e.target.id === 'pub-age') { S.pub.age = e.target.value === '' ? null : +e.target.value; renderPublic(); }
+    });
+    $('#pub-out').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-hnr]'); if (!b) return;
+      hnrRun(Object.assign({ kind: b.dataset.hnr, department: b.dataset.dept }, hnrRegion()), $('#pub-out .hnr-out'));
+    });
+    $('#pub-out').addEventListener('submit', function (e) {
+      if (!e.target.classList.contains('hnr-drug')) return; e.preventDefault();
+      var v = e.target.drug.value.trim(); if (v) hnrRun({ kind: 'drug', drugName: v }, $('#pub-out .hnr-out'));
     });
     document.addEventListener('click', function (e) { var c = e.target.closest('.copy'); if (!c) return; navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy).then(function () { c.textContent = '복사됨'; }); });
     $('#btn-region').addEventListener('click', function () { S.origin = S.demo ? S.origin : null; load(regionReq()); });

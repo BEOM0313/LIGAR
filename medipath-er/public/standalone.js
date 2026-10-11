@@ -29,7 +29,8 @@
       };
       return {
         region: function (s, g) { return get('/api/region?sido=' + encodeURIComponent(s) + '&sigungu=' + encodeURIComponent(g)); },
-        nearby: function (lat, lon) { return get('/api/nearby?lat=' + lat + '&lon=' + lon); }
+        nearby: function (lat, lon) { return get('/api/nearby?lat=' + lat + '&lon=' + lon); },
+        hnr: function (q) { return get('/api/hnr?' + Object.keys(q).filter(function (k) { return q[k] != null && q[k] !== ''; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&')); }
       };
     }
     client = new core.Client({
