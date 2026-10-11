@@ -111,6 +111,8 @@ test/test.js         node --test
 | `/api/nearby?lat=&lon=` | 현재 위치 주변 (최대 4개 시군구) | 위치기반 조회 후 위와 동일 |
 | `/api/basic?hpid=` | 기관 기본정보 | 기본정보 |
 | `/api/status` | 오늘 호출 수 | - |
+| `/api/hnr?kind=hospitals|pharmacies|drug` | 지금 여기 응급실 MCP 대신 호출 | (저쪽 서버) |
+| `POST /mcp` | 메디패스 MCP 도구 3종 | 위와 동일 + 오픈스트리트맵 |
 
 캐시: 가용병상·메시지 2분, 중증질환 5분, 기관 정보 24시간. 공공데이터포털 개발계정은 **기능별 하루 1,000건**이므로 실서비스 전 운영계정 신청이 필요합니다.
 
