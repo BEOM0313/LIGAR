@@ -35,6 +35,24 @@ npm test                    # 테스트
 - 기관 목록·진료과목은 하루 동안 브라우저에 저장해 호출 수를 줄입니다. 호출 수도 브라우저별로 셉니다.
 - 코드를 고친 뒤 `npm run build`로 다시 만듭니다.
 
+### 오픈스트리트맵 길찾기 · 지도 · 장소 검색
+키 없이 오픈스트리트맵 공개 서버를 씁니다 (참고: [오픈스트리트맵 한국 · 이용하기](https://osm.kr/usage/)).
+
+| 기능 | 서버 | 쓰는 방식 |
+|---|---|---|
+| 차량·도보 이동 시간 | OSRM (`routing.openstreetmap.de/routed-car`, `routed-foot`) | 출발지에서 가까운 병원 25곳을 **table 서비스 1회**로 계산 (차량 1회 + 도보 1회) |
+| 추천 병원까지 경로 선 | OSRM route | 지도에 표시 |
+| 출발지 검색 | Photon (`photon.komoot.io`) → 결과 없으면 Nominatim | ‘검색’ 버튼을 누를 때만 호출 (자동완성 금지 정책) |
+| 지도 | Leaflet + `tile.openstreetmap.org` | 지도를 누르면 그 위치가 출발지 |
+
+- 순위의 도착 시간은 **OSRM 도로 기준 차량 시간**입니다 (실시간 교통 미반영). 길찾기 서버에 연결하지 못하면 직선거리 추정으로 돌아가고 화면에 표시합니다.
+- 도보가 20분 이내이고 차량과 3분 이내로 비슷하면 ‘걸어가도 비슷해요’를 표시합니다. 시간이 생명인 상황(심정지·뇌졸중·흉통·중증 외상 등)에서는 도보 안내를 하지 않습니다.
+- 공개 서버는 **초당 1건 이하 · 비상업적 적정 사용** 조건입니다. 같은 서버로 가는 요청은 1.1초 간격으로 줄 세우고 10분간 캐시합니다. 실제 서비스로 운영할 때는 자체 OSRM·타일 서버를 두고 주소만 바꾸세요:
+  ```html
+  <script>window.MP_ROUTE_CFG = { car: 'https://내서버/osrm-car', foot: 'https://내서버/osrm-foot', tiles: 'https://내서버/tiles/{z}/{x}/{y}.png' };</script>
+  ```
+- 지도 화면에는 오픈스트리트맵 저작자 표시(© OpenStreetMap 기여자)가 들어갑니다.
+
 ### Claude Code 클라우드 환경에서 실행할 때
 기본 네트워크 정책이 `apis.data.go.kr`을 막습니다. 환경 설정 → Network access → Allowed domains에 `apis.data.go.kr`을 추가하세요.
 ([설정 방법](https://code.claude.com/docs/en/cloud-environments#network-access))
@@ -49,7 +67,8 @@ lib/service.js       지역·위치 단위로 여러 오퍼레이션을 묶어 �
 lib/xml.js           응답 XML 파서 (게이트웨이 오류 응답 포함)
 lib/normalize.js     여러 오퍼레이션 응답을 기관ID(hpid)로 합쳐 병원 모델 생성
 public/logic.js      판단 로직 (일반인 응급처치, 현장 외상 분류, RACE, 참고 등급, 필요 자원, 매칭, 사전연락 문구)
-public/app.js        화면
+public/route.js      오픈스트리트맵 길찾기(OSRM) · 장소 검색(Photon/Nominatim)
+public/app.js        화면 · 지도
 public/standalone.js 단일 HTML의 데이터 연결 설정
 tools/build-html.js  dist/medipath-er.html 생성
 dist/medipath-er.html 단일 HTML 결과물

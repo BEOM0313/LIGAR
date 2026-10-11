@@ -108,3 +108,20 @@ legend { font-size: 13px; font-weight: 800; padding: 0 6px }
 .conn-row > label:not(.chk) { flex: 1 1 320px }
 @media (max-width: 720px) { .conn-modes { grid-template-columns: minmax(0, 1fr) } }
 .conn-row[hidden] { display: none }
+/* 출발지 검색 · 지도 */
+.search-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-top: 12px }
+.search-res { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px }
+.search-res .res { width: 100%; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 12px }
+.search-res .res small { display: block; color: var(--muted); font-size: 12px }
+.search-res[hidden] { display: none }
+.mapbox { margin-top: 12px }
+#map { height: 340px; border-radius: 14px; border: 1px solid var(--line); background: #E8ECEF; z-index: 0 }
+.mapbox.nomap #map { display: none }
+.route-note { margin-top: 6px }
+.mkwrap { background: none; border: 0 }
+.mk { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2.5px solid var(--muted); color: var(--sub); font: 800 12px/1 var(--mono); box-shadow: 0 2px 6px rgba(17,24,39,.25) }
+.mk.ok { border-color: var(--green); color: var(--green) }
+.mk.best { background: var(--brand); border-color: var(--ink); color: var(--ink); width: 32px; height: 32px; margin: -2px; font-size: 14px }
+.mk.ex { border-color: var(--line2); color: var(--muted); background: var(--soft); opacity: .85 }
+.eta span { display: block }
+@media (max-width: 560px) { #map { height: 260px } }

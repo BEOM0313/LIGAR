@@ -131,3 +131,59 @@ test('서버: 가상 데이터로 /api/region · /api/nearby', async function ()
     var idx = await fetch('http://127.0.0.1:' + port + '/'); assert.strictEqual(idx.status, 200);
   } finally { S.server.close(); }
 });
+
+/* ── 오픈스트리트맵 길찾기 (OSRM · Photon · Nominatim 응답 형식) ── */
+var RouteMod = require('../public/route');
+function fakeRouter(handler) { var seen = []; var r = new RouteMod.Router({ gapMs: 0, fetchJson: function (u) { seen.push(u); return Promise.resolve(handler(u)); } }); r.seen = seen; return r; }
+
+test('OSRM table: 출발지 1곳 → 병원별 분·km, 경로 없는 병원 제외', async function () {
+  var rt = fakeRouter(function () { return { code: 'Ok', durations: [[0, 420, null, 1250]], distances: [[0, 3100, null, 9800]] }; });
+  var out = await rt.table('car', ORIGIN, [{ hpid: 'A', lat: 37.5, lon: 127.04 }, { hpid: 'B', lat: 37.51, lon: 127.0 }, { hpid: 'C', lat: 37.48, lon: 127.01 }]);
+  assert.deepStrictEqual(out, { A: { min: 7, km: 3.1 }, C: { min: 21, km: 9.8 } });
+  assert.match(rt.seen[0], /^https:\/\/routing\.openstreetmap\.de\/routed-car\/table\/v1\/driving\/127\.027600,37\.497900;127\.040000,37\.500000;/);
+  assert.match(rt.seen[0], /sources=0&annotations=duration,distance$/);
+});
+test('OSRM route: GeoJSON 좌표를 [위도, 경도]로 변환', async function () {
+  var rt = fakeRouter(function () { return { code: 'Ok', routes: [{ duration: 600, distance: 4200, geometry: { type: 'LineString', coordinates: [[127.0276, 37.4979], [127.04, 37.5]] } }] }; });
+  var r = await rt.route('foot', ORIGIN, { lat: 37.5, lon: 127.04 });
+  assert.deepStrictEqual(r, { min: 10, km: 4.2, line: [[37.4979, 127.0276], [37.5, 127.04]] });
+  assert.match(rt.seen[0], /routed-foot\/route\/v1\/driving\//);
+});
+test('OSRM 오류 코드는 예외', async function () {
+  var rt = fakeRouter(function () { return { code: 'NoRoute' }; });
+  await assert.rejects(rt.route('car', ORIGIN, { lat: 1, lon: 1 }), /NoRoute/);
+});
+test('장소 검색: Photon 결과 → 없으면 Nominatim', async function () {
+  var rt = fakeRouter(function (u) {
+    if (/photon/.test(u)) return /없는곳/.test(decodeURIComponent(u)) ? { features: [] } : { features: [{ geometry: { coordinates: [127.0327, 37.4837] }, properties: { name: '서초구청', countrycode: 'KR', state: '서울특별시', district: '서초구', street: '남부순환로' } }] };
+    return [{ lat: '37.1', lon: '127.1', name: '없는곳', display_name: '없는곳, 어떤동, 어떤구, 서울특별시, 06750, 대한민국' }];
+  });
+  var a = await rt.search('서초구청');
+  assert.strictEqual(a[0].name, '서초구청'); assert.strictEqual(a[0].lat, 37.4837); assert.strictEqual(a[0].src, 'photon');
+  var b = await rt.search('없는곳');
+  assert.strictEqual(b[0].src, 'nominatim'); assert.strictEqual(b[0].addr, '서울특별시 어떤구 어떤동');
+  assert.ok(rt.seen.some(function (u) { return /nominatim.*countrycodes=kr/.test(u); }));
+});
+test('요청 간격: 같은 호스트는 줄 세워 보낸다', async function () {
+  var t = [], r = new RouteMod.Router({ gapMs: 50, fetchJson: function () { t.push(Date.now()); return Promise.resolve({ code: 'Ok', durations: [[0, 60]], distances: [[0, 1]] }); } });
+  await Promise.all([r.table('car', ORIGIN, [{ hpid: 'A', lat: 1, lon: 1 }]), r.table('foot', ORIGIN, [{ hpid: 'A', lat: 1, lon: 1 }])]);
+  assert.ok(t[1] - t[0] >= 45, '두 번째 요청은 간격을 두고');
+});
+test('매칭: 길찾기 시간이 있으면 직선거리 대신 사용 · 순위가 바뀜', async function () {
+  var hs = await demoHospitals(), needs = L.needsFor({ condition: 'other' });
+  var est = L.match(hs, needs, ORIGIN);
+  var first = est.ranked[0].h.hpid, car = {}, foot = {};
+  hs.forEach(function (h) { car[h.hpid] = { min: h.hpid === first ? 40 : 8, km: 3 }; foot[h.hpid] = { min: h.hpid === first ? 90 : 10, km: 1 }; }); // 직선으로는 가깝지만 강 건너 우회
+  var rt = L.match(hs, needs, ORIGIN, { routes: { car: car, foot: foot } });
+  assert.notStrictEqual(rt.ranked[0].h.hpid, first);
+  assert.strictEqual(rt.ranked[0].etaSrc, 'route'); assert.strictEqual(rt.ranked[0].eta, 8); assert.strictEqual(rt.ranked[0].foot.min, 10);
+  assert.ok(rt.ranked[0].walkOk, '차량 8분 · 도보 10분이면 걸어가도 비슷');
+  var far = rt.ranked.concat(rt.excluded).find(function (r) { return r.h.hpid === first; }); assert.strictEqual(far.walkOk, false);
+});
+test('병원 메시지: 질환 분류가 다르면 감점하지 않음', async function () {
+  var hs = await demoHospitals(), m = L.match(hs, L.needsFor({ condition: 'peds_abd', age: 8 }), ORIGIN);
+  var a = m.ranked.find(function (r) { return r.h.hpid === 'A0000001'; });
+  assert.strictEqual(a.blocking.length, 0, '영유아 내시경 불가 메시지는 충수염과 무관');
+  var g = L.match(hs, L.needsFor({ condition: 'gi_bleed', age: 2 }), ORIGIN), all = g.ranked.concat(g.excluded);
+  assert.ok(all.find(function (r) { return r.h.hpid === 'A0000001'; }).blocking.length > 0 || !all.find(function (r) { return r.h.hpid === 'A0000001'; }).eligible);
+});

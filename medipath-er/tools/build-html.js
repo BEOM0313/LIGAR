@@ -13,6 +13,7 @@ var html = rd('public/index.html');
 function swap(a, b) { if (html.indexOf(a) < 0) throw new Error('missing ' + a); html = html.replace(a, function () { return b; }); }
 swap('<link rel="stylesheet" href="style.css">', '<style>\n' + rd('public/style.css') + '</style>');
 swap('<script src="logic.js"></script>', inline(bundle) + '\n' + inline('window.MP_FIXTURES = ' + JSON.stringify(fixtures) + ';') + '\n' + inline(rd('public/logic.js')) + '\n' + inline(rd('public/standalone.js')));
+swap('<script src="route.js"></script>', inline(rd('public/route.js')));
 swap('<script src="app.js"></script>', inline(rd('public/app.js')));
 if (/DATA_GO_KR_KEY\s*=\s*[^\s여]/.test(html)) throw new Error('키로 보이는 값이 포함됨');
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });

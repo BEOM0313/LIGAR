@@ -345,7 +345,9 @@
     var out = [];
     (h.messages || []).forEach(function (m) {
       var end = parseTime(m.end); if (end && now && end < now) return;
-      var hay = (m.text || '') + ' ' + (m.disease || '');
+      // 메시지에 질환 분류(symTypCodMag)가 있으면 그 분류로만 관련성을 본다 ('[응급내시경] 영유아 위장관'이 소아 충수염과 무관하듯).
+      // 분류가 없거나 '응급실' 일반 메시지면 본문으로 판단한다.
+      var hay = m.disease && !/^응급실/.test(m.disease) ? m.disease : (m.text || '') + ' ' + (m.disease || '');
       var rel = needs.filter(function (n) { var r = R[n.key]; return r && r.msg && r.msg.test(hay); }).map(function (n) { return n.key; });
       out.push({ text: m.text, disease: m.disease, kind: m.kind, relevantTo: rel });
     });
@@ -357,8 +359,12 @@
     opts = opts || {};
     var now = opts.now || Date.now(), staleMin = opts.staleMin || 30, timeCritical = !!opts.timeCritical;
     var rows = hospitals.map(function (h) {
-      var km = origin && h.lat != null ? haversine(origin, h) : null;
-      var eta = km != null ? etaMin(km, opts) : null;
+      // 길찾기(OSRM) 결과가 있으면 실제 도로 기준 시간, 없으면 직선거리 추정
+      var rt = opts.routes || {}, rc = rt.car && rt.car[h.hpid], rf = rt.foot && rt.foot[h.hpid];
+      var km = rc && rc.km != null ? rc.km : origin && h.lat != null ? haversine(origin, h) : null;
+      var eta = rc ? rc.min : km != null ? etaMin(km, opts) : null;
+      var foot = rf ? { min: rf.min, km: rf.km } : null;
+      var walkOk = !!(foot && eta != null && foot.min <= 20 && foot.min <= eta + 3);
       var cells = needs.map(function (n) { var r = R[n.key], v = r ? r.test(h) : null; return { key: n.key, label: r ? r.label : n.key, level: n.level, why: n.why, ok: v }; });
       var missing = cells.filter(function (c) { return c.level === 'must' && c.ok === false; });
       var unknown = cells.filter(function (c) { return c.level === 'must' && c.ok === null; });
@@ -378,7 +384,7 @@
       if (stale) { pen += 2; notes.push(ageMin == null ? '갱신 시각 없음' : ageMin + '분 전 정보'); }
       var w = timeCritical ? 2 : 1;
       var score = (eta != null ? eta * w : 30) + pen - prefs * 4;
-      return { h: h, km: km, eta: eta, cells: cells, eligible: missing.length === 0, missing: missing, unknown: unknown, prefs: prefs, crowd: crowd, ageMin: ageMin, stale: stale, messages: msgs, blocking: blocking, notes: notes, score: score };
+      return { h: h, km: km, eta: eta, etaSrc: rc ? 'route' : 'estimate', foot: foot, walkOk: walkOk, cells: cells, eligible: missing.length === 0, missing: missing, unknown: unknown, prefs: prefs, crowd: crowd, ageMin: ageMin, stale: stale, messages: msgs, blocking: blocking, notes: notes, score: score };
     });
     // 필수 자원이 확인된 병원을 미확인 병원보다 항상 앞에 둔다
     var ok = rows.filter(function (r) { return r.eligible; }).sort(function (a, b) { return (a.unknown.length > 0) - (b.unknown.length > 0) || a.score - b.score; });

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,7 +26,13 @@
     <button id="btn-region" class="ghost">지역으로 조회</button>
     <button id="btn-geo" class="ghost">현재 위치로 조회</button>
   </div>
+  <form class="search-row" id="search-form" role="search">
+    <label>출발지 검색 (주소 · 장소)<input id="search-q" placeholder="예: 서초구청, 테헤란로 152"></label>
+    <button class="ghost" type="submit">검색</button>
+  </form>
+  <ul class="search-res" id="search-res" hidden></ul>
   <p class="caption" id="where-note"></p>
+  <div class="mapbox"><div id="map" aria-label="병원 지도"></div><div class="route-note caption" id="route-note"></div></div>
 </section>
 
 <nav class="tabs" role="tablist">
@@ -162,7 +169,9 @@
   </section>
 </main>
 <datalist id="gu-list"></datalist>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="logic.js"></script>
+<script src="route.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
