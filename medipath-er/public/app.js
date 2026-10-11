@@ -14,18 +14,27 @@
   function fmtTime(t) { var d = new Date(t); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
   /* ── 데이터 ── */
-  function load(url, note) {
+  // 데이터 출처: 기본은 같은 서버의 /api, 단일 HTML에서는 window.MPSource(직접 호출·프록시·가상)로 바뀐다
+  var serverSource = {
+    region: function (sido, gu) { return fetch('/api/region?sido=' + encodeURIComponent(sido) + '&sigungu=' + encodeURIComponent(gu)).then(function (r) { return r.json(); }); },
+    nearby: function (lat, lon) { return fetch('/api/nearby?lat=' + lat + '&lon=' + lon).then(function (r) { return r.json(); }); }
+  };
+  function source() { return window.MPSource || serverSource; }
+  function load(req, note) {
     $('#status').textContent = '불러오는 중…';
     if (STATIC) return Promise.resolve(STATIC).then(apply);
-    return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+    var src = source(), p = req.kind === 'nearby' ? src.nearby(req.lat, req.lon) : src.region(req.sido, req.gu);
+    return Promise.resolve(p).then(function (d) {
       if (!d.ok && !(d.hospitals || []).length) throw new Error(d.message || (d.errors || []).join(', ') || '조회 실패');
-      apply(d); if (note) $('#where-note').textContent = note;
+      apply(d); $('#where-note').textContent = note || '';
     }).catch(function (e) { $('#status').innerHTML = '<span class="pill no">오류</span> ' + esc(e.message); });
   }
+  function regionReq() { return { kind: 'region', sido: $('#sido').value, gu: $('#sigungu').value.trim() }; }
   function apply(d) {
     S.hospitals = d.hospitals || []; S.demo = !!d.demo; S.fetchedAt = d.fetchedAt || Date.now(); S.regions = d.regions || [];
     if (d.origin) S.origin = d.origin;
-    if (!S.origin && S.demo) S.origin = DEMO_ORIGIN;
+    if (!S.origin && S.demo) { S.origin = DEMO_ORIGIN; S.originDemo = true; }
+    if (S.originDemo && !S.demo) { S.origin = null; S.originDemo = false; }
     var warn = (d.errors || []).length ? ' · 일부 항목 조회 실패 ' + d.errors.length + '건' : '';
     $('#status').innerHTML = (S.demo ? '<span class="pill alt">가상 데이터 (DEMO)</span> ' : '<span class="pill ok">실시간</span> ') +
       '병원 ' + S.hospitals.length + '곳 · ' + esc(S.regions.join(', ')) + ' · ' + fmtTime(S.fetchedAt) + ' 기준' + (d.stale ? ' · <b>캐시된 이전 자료</b>' : '') + esc(warn);
@@ -162,20 +171,20 @@
       if (e.target.id === 'pub-age') { S.pub.age = e.target.value === '' ? null : +e.target.value; renderPublic(); }
     });
     document.addEventListener('click', function (e) { var c = e.target.closest('.copy'); if (!c) return; navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy).then(function () { c.textContent = '복사됨'; }); });
-    $('#btn-region').addEventListener('click', function () { S.origin = S.demo ? S.origin : null; load('/api/region?sido=' + encodeURIComponent($('#sido').value) + '&sigungu=' + encodeURIComponent($('#sigungu').value.trim())); });
+    $('#btn-region').addEventListener('click', function () { S.origin = S.demo ? S.origin : null; load(regionReq()); });
     $('#btn-geo').addEventListener('click', geo);
     if (STATIC) return load();
     geo(true);
   }
   function geo(initial) {
-    if (!navigator.geolocation) return load('/api/region?sido=서울특별시&sigungu=강남구');
+    if (!navigator.geolocation) return load(regionReq());
     navigator.geolocation.getCurrentPosition(function (pos) {
       S.origin = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      load('/api/nearby?lat=' + S.origin.lat + '&lon=' + S.origin.lon, '현재 위치 기준 (정확도 약 ' + Math.round(pos.coords.accuracy) + 'm)');
+      load({ kind: 'nearby', lat: S.origin.lat, lon: S.origin.lon }, '현재 위치 기준 (정확도 약 ' + Math.round(pos.coords.accuracy) + 'm)');
     }, function () {
-      if (initial !== true) $('#where-note').textContent = '위치 권한이 없어 지역으로 조회합니다.';
-      load('/api/region?sido=' + encodeURIComponent($('#sido').value) + '&sigungu=' + encodeURIComponent($('#sigungu').value.trim()));
+      load(regionReq(), initial === true ? '' : '위치 권한이 없어 지역으로 조회합니다.');
     }, { timeout: 8000, maximumAge: 60000 });
   }
+  window.MPApp = { reload: function () { if (S.originDemo) { S.origin = null; S.originDemo = false; } return S.origin ? load({ kind: 'nearby', lat: S.origin.lat, lon: S.origin.lon }) : load(regionReq()); }, geo: geo };
   init();
 })();

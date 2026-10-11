@@ -21,6 +21,20 @@ npm test                    # 테스트
 - Encoding 키(`%2B…`)와 Decoding 키(`+ / =`) 모두 넣을 수 있습니다.
 - 키가 없거나 `DEMO=1`이면 `fixtures/`의 **가상 병원 데이터**(실존 병원 아님)로 동작합니다.
 
+### 단일 HTML 파일 (`dist/medipath-er.html`)
+서버 없이 파일 하나로 실행합니다. 브라우저에서 열고 위쪽 **데이터 연결**에서 고릅니다.
+
+| 방식 | 설명 |
+|---|---|
+| 가상 데이터 | 실존하지 않는 병원 6곳으로 체험 |
+| 공공데이터포털 직접 연결 | 인증키를 입력하면 브라우저가 `apis.data.go.kr`을 직접 호출. 키는 파일에 없고, ‘기억’을 켤 때만 그 브라우저(localStorage)에 저장 |
+| 메디패스 서버 경유 | `npm start`로 띄운 서버 주소를 입력. 키는 서버에만 있음 |
+
+- 브라우저가 직접 호출을 막으면(CORS) 화면에 안내가 나옵니다. 그때는 ‘서버 경유’를 쓰세요.
+- 직접 연결은 개인 기기에서 쓰는 용도입니다. 여러 사람에게 공개할 때는 키가 브라우저에 드러나지 않도록 서버 경유로 배포하세요.
+- 기관 목록·진료과목은 하루 동안 브라우저에 저장해 호출 수를 줄입니다. 호출 수도 브라우저별로 셉니다.
+- 코드를 고친 뒤 `npm run build`로 다시 만듭니다.
+
 ### Claude Code 클라우드 환경에서 실행할 때
 기본 네트워크 정책이 `apis.data.go.kr`을 막습니다. 환경 설정 → Network access → Allowed domains에 `apis.data.go.kr`을 추가하세요.
 ([설정 방법](https://code.claude.com/docs/en/cloud-environments#network-access))
@@ -29,11 +43,16 @@ npm test                    # 테스트
 
 ```
 server.js            HTTP 서버 (정적 파일 + /api/*), .env 로딩
-lib/api.js           공공데이터포털 호출 · 캐시 · 기능별 일일 한도 · 장애 시 이전 자료 반환
+lib/core.js          공공데이터포털 호출 · 캐시 · 기능별 일일 한도 · 장애 시 이전 자료 반환 (서버·HTML 공용)
+lib/api.js           Node용 연결 (fetch, fixtures 파일)
+lib/service.js       지역·위치 단위로 여러 오퍼레이션을 묶어 병원 목록 생성 (서버·HTML 공용)
 lib/xml.js           응답 XML 파서 (게이트웨이 오류 응답 포함)
 lib/normalize.js     여러 오퍼레이션 응답을 기관ID(hpid)로 합쳐 병원 모델 생성
 public/logic.js      판단 로직 (일반인 응급처치, 현장 외상 분류, RACE, 참고 등급, 필요 자원, 매칭, 사전연락 문구)
 public/app.js        화면
+public/standalone.js 단일 HTML의 데이터 연결 설정
+tools/build-html.js  dist/medipath-er.html 생성
+dist/medipath-er.html 단일 HTML 결과물
 fixtures/*.xml       명세서 형식의 가상 응답
 test/test.js         node --test
 ```
